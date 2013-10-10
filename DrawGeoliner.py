@@ -6,11 +6,15 @@ def run():
 
     details = {
         
-	"complexity": ["outline","angleLines","angleMarks"],
+	"complexity": ["outline","angleLines","angleMarks","rulerMarks","rulerNums"],
+        "degMarkSize": (2,1),
         "degsPerLine":10,
         "degsPerMark":1,
-        "description": "angleMarks",
-        "markSize": (2,1),
+        "description": "rulerMarks",
+        "mmPerMark":1,
+        "rulerClearance":6,
+        "rulerMarkSize":(3,) + 4*(0.75,1.5) + (0.75,),
+        "rulerMax":65,
 	"size": 100,
         "topLeft": (0,0)
         
@@ -44,22 +48,44 @@ def drawGeoliner(drawing,details):
         degsPerDevision = details["degsPerLine"]
         maxRads = m.pi
 
-        cXY=  (oX + l/2.0,  oY + l/2.0)
+        cX,cY=  (oX + l/2.0,  oY + l/2.0)
 
         rPD = (degsPerDevision/180.0 * m.pi)
         theta = rPD
-        while theta <= maxRads:
+        maxD = 0
+        while theta < maxRads-0.00001:
             if theta< m.pi/2.0:
                 rY = 0
                 rX = l*(1 - m.sqrt(0.5)*(m.sin(theta)/m.sin(0.75*m.pi - theta)))
-                drawing.add(dxf.line(cXY,(oX+rX,oX+rY)))
+
+                dX= cX - rX
+                dY = cY - rY
+
+                e1 = details["rulerClearance"]
+                e2 = e1 /m.tan(theta)
+
+                d2X = m.sqrt(0.5)*e1  - m.sqrt(0.5)*e2
+                d2Y = m.sqrt(0.5)*e1  + m.sqrt(0.5)*e2
+
+                
+                drawing.add(dxf.line((cX-d2X, cY-d2Y),(oX+rX,oY+rY)))
             else:
                 rX = 0
                 alpha = m.pi - theta
                 rY = l*(1 - m.sqrt(0.5)*(m.sin(alpha)/m.sin(0.75*m.pi - alpha)))
-                drawing.add(dxf.line(cXY,(oX+rX,oX+rY)))
+                
+                dX= cX - rX
+                dY = cY - rY
+
+                e1 = details["rulerClearance"]
+                e2 = e1 /m.tan(theta)
+
+                d2X = m.sqrt(0.5)*e1  - m.sqrt(0.5)*e2
+                d2Y = m.sqrt(0.5)*e1  + m.sqrt(0.5)*e2
+
+                drawing.add(dxf.line((cX-d2X,cY-d2Y),(oX+rX,oY+rY)))
+                
             theta += rPD
-            
     if "wordCircle" in details["complexity"]:
         drawing.add(dxf.circle(radius=10, center=(oX,oY)))
         drawing.add(dxf.circle(radius=11, center=(oX,oY)))
@@ -80,7 +106,7 @@ def drawGeoliner(drawing,details):
         count = 0
         while theta <= maxRads:
             if theta%(rad(details["degsPerLine"])) > 0.00001 and (-theta)%(rad(details["degsPerLine"])) > 0.00001:
-                r = details["markSize"][count%len(details["markSize"])]
+                r = details["degMarkSize"][count%len(details["degMarkSize"])]
                 if theta< m.pi/2.0:
                     rX = l*(1 - m.sqrt(0.5)*(m.sin(theta)/m.sin(0.75*m.pi - theta)))
                     rY = 0
@@ -106,6 +132,41 @@ def drawGeoliner(drawing,details):
                     drawing.add(dxf.line((oX+rX2,oY+rY2),(oX+rX,oY+rY)))
             theta += rPM
             count += 1
+    if "rulerMarks" in details["complexity"]:
+        cX,cY=  (oX + l/2.0,  oY + l/2.0)
+        gap = details["mmPerMark"]
+        e2 = gap
+        count = 1
+
+        e1 = details["rulerMarkSize"][0]
+
+        dX = m.sqrt(0.5)*e1
+        dY = m.sqrt(0.5)*e1
+
+        drawing.add(dxf.line((cX,cY),(cX-dX,cY-dY)))
+
+        while e2 <= (details["rulerMax"]) + 0.00001:
+            e1 = details["rulerMarkSize"][count%(len(details["rulerMarkSize"]))]
+
+            dX =  - m.sqrt(0.5)*e2
+            dY =  + m.sqrt(0.5)*e2
+
+            d2X = m.sqrt(0.5)*e1 - m.sqrt(0.5)*e2
+            d2Y = m.sqrt(0.5)*e1 + m.sqrt(0.5)*e2
+
+            drawing.add(dxf.line((cX-d2X,cY-d2Y),(cX-dX,cY-dY)))
+
+            dX =  + m.sqrt(0.5)*e2
+            dY =  - m.sqrt(0.5)*e2
+
+            d2X = m.sqrt(0.5)*e1 + m.sqrt(0.5)*e2
+            d2Y = m.sqrt(0.5)*e1 - m.sqrt(0.5)*e2
+
+            drawing.add(dxf.line((cX-d2X,cY-d2Y),(cX-dX,cY-dY)))
+
+            e2 += gap
+            count += 1
+        
             
         
 def rad(deg):

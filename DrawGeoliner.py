@@ -26,10 +26,11 @@ def run():
 
 def nowStr():
     timeNow = time.gmtime()
-    now = str(timeNow.tm_year) + str(timeNow.tm_mon) + str(timeNow.tm_mday) + "_"
-    now = now + str(timeNow.tm_hour) + str(timeNow.tm_min) + str(timeNow.tm_sec)
+    now = c(str(timeNow.tm_year),4) + c(str(timeNow.tm_mon),2) + c(str(timeNow.tm_mday),2) + "_"
+    now = now + c(str(timeNow.tm_hour),2) + c(str(timeNow.tm_min),2) + c(str(timeNow.tm_sec),2)
     return now
-
+def c(string, length, char = "0"):
+    return char*(length-len(string)) + string
 
 def drawGeoliner(drawing,details):
     oX,oY = details["topLeft"]
@@ -76,18 +77,19 @@ def drawGeoliner(drawing,details):
 
         rPM = rad(dPM)
         theta = rPM
+        count = 0
         while theta <= maxRads:
-            if theta%(details["degsPerLine"]) > 0.000001:
+            if theta%(rad(details["degsPerLine"])) > 0.00001 and (-theta)%(rad(details["degsPerLine"])) > 0.00001:
+                r = details["markSize"][count%len(details["markSize"])]
                 if theta< m.pi/2.0:
-                    rY = 0
                     rX = l*(1 - m.sqrt(0.5)*(m.sin(theta)/m.sin(0.75*m.pi - theta)))
+                    rY = 0
 
                     dX= rX - cX
                     dY = rY - cY
-                    dR = m.sqrt(dX*dX + dY*dY)
                     
-                    rX2 = rX - 2 * dX/dR
-                    rY2 = rY - 2 * dY/dR
+                    rX2 = rX + r * (dX/dY)
+                    rY2 = rY + r
                     
                     drawing.add(dxf.line((oX+rX2,oY+rY2),(oX+rX,oY+rY)))
                 else:
@@ -97,14 +99,13 @@ def drawGeoliner(drawing,details):
 
                     dX= rX - cX
                     dY = rY - cY
-                    dR = m.sqrt(dX*dX + dY*dY)
                     
-                    rX2 = rX - 2 * dX/dR
-                    rY2 = rY - 2 * dY/dR
+                    rX2 = rX+ r
+                    rY2 = rY + r * (dY/dX)
                     
                     drawing.add(dxf.line((oX+rX2,oY+rY2),(oX+rX,oY+rY)))
-                theta += rPM
-                        
+            theta += rPM
+            count += 1
             
         
 def rad(deg):

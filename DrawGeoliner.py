@@ -1,4 +1,6 @@
 from dxfwrite import DXFEngine as dxf
+from dxfwrite.const import CENTER
+
 import math as m, time
 
 AUTO_RUN = True
@@ -10,9 +12,9 @@ def run():
         "degMarkSize": (2,1),
         "degsPerLine":10,
         "degsPerMark":1,
-        "description": "rulerMarks",
+        "description": "rulerNums",
         "mmPerMark":1,
-        "rulerClearance":6,
+        "rulerClearance":5,
         "rulerMarkSize":(3,) + 4*(0.75,1.5) + (0.75,),
         "rulerMax":65,
 	"size": 100,
@@ -146,8 +148,12 @@ def drawGeoliner(drawing,details):
         drawing.add(dxf.line((cX,cY),(cX-dX,cY-dY)))
 
         while e2 <= (details["rulerMax"]) + 0.00001:
-            e1 = details["rulerMarkSize"][count%(len(details["rulerMarkSize"]))]
+            
+            index = count%(len(details["rulerMarkSize"]))
+            e1 = details["rulerMarkSize"][index]
 
+            
+                
             dX =  - m.sqrt(0.5)*e2
             dY =  + m.sqrt(0.5)*e2
 
@@ -155,7 +161,15 @@ def drawGeoliner(drawing,details):
             d2Y = m.sqrt(0.5)*e1 + m.sqrt(0.5)*e2
 
             drawing.add(dxf.line((cX-d2X,cY-d2Y),(cX-dX,cY-dY)))
-
+            
+            if "rulerNums" in details["complexity"] and index == 0:
+                
+                drawing.add(dxf.text(str(int(e2)),
+                                     height=0.9*(details["rulerClearance"]-e1),
+                                     rotation = 135,
+                                     halign = CENTER,
+                                     alignpoint =(cX-d2X,cY-d2Y)))
+                
             dX =  + m.sqrt(0.5)*e2
             dY =  - m.sqrt(0.5)*e2
 
@@ -163,9 +177,18 @@ def drawGeoliner(drawing,details):
             d2Y = m.sqrt(0.5)*e1 - m.sqrt(0.5)*e2
 
             drawing.add(dxf.line((cX-d2X,cY-d2Y),(cX-dX,cY-dY)))
-
+            
+            if "rulerNums" in details["complexity"] and index == 0:
+                
+                drawing.add(dxf.text(str(int(e2)),
+                                     height=0.9*(details["rulerClearance"]-e1),
+                                     rotation = 135,
+                                     halign = CENTER,
+                                     alignpoint =(cX-d2X,cY-d2Y)))
             e2 += gap
             count += 1
+        
+    
         
             
         

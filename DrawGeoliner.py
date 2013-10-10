@@ -5,10 +5,15 @@ AUTO_RUN = True
 def run():
 
     details = {
-        "description": "wordCircle",
-	"complexity": ["wordCircle"],
+        
+	"complexity": ["outline","angleLines","angleMarks"],
+        "degsPerLine":10,
+        "degsPerMark":1,
+        "description": "angleMarks",
+        "markSize": (2,1),
 	"size": 100,
         "topLeft": (0,0)
+        
 	}
 
     name = "tests/test_geoliner_" + details["description"] + "_" + \
@@ -35,7 +40,7 @@ def drawGeoliner(drawing,details):
         drawing.add(dxf.line((oX, oY),(oX, oY + l)))
         drawing.add(dxf.line((oX, oY + l),(oX + l, oY)))
     if "angleLines" in details["complexity"]:
-        degsPerDevision = 10
+        degsPerDevision = details["degsPerLine"]
         maxRads = m.pi
 
         cXY=  (oX + l/2.0,  oY + l/2.0)
@@ -46,15 +51,14 @@ def drawGeoliner(drawing,details):
             if theta< m.pi/2.0:
                 rY = 0
                 rX = l*(1 - m.sqrt(0.5)*(m.sin(theta)/m.sin(0.75*m.pi - theta)))
-                drawing.add(dxf.line(cXY,(rX,rY)))
-                print theta
+                drawing.add(dxf.line(cXY,(oX+rX,oX+rY)))
             else:
                 rX = 0
                 alpha = m.pi - theta
                 rY = l*(1 - m.sqrt(0.5)*(m.sin(alpha)/m.sin(0.75*m.pi - alpha)))
-                drawing.add(dxf.line(cXY,(rX,rY)))
-                print alpha
+                drawing.add(dxf.line(cXY,(oX+rX,oX+rY)))
             theta += rPD
+            
     if "wordCircle" in details["complexity"]:
         drawing.add(dxf.circle(radius=10, center=(oX,oY)))
         drawing.add(dxf.circle(radius=11, center=(oX,oY)))
@@ -64,11 +68,47 @@ def drawGeoliner(drawing,details):
             rX,rY = oX + 10*m.sin(angle), oY + 10*m.cos(angle)
             drawing.add(dxf.text(str(i),insert = (rX,rY),height=1,rotation = -angleD))
             
-        
+    if "angleMarks" in details["complexity"]:
+        dPM = details["degsPerMark"]
+        maxRads = m.pi
+
+        cX,cY=  (oX + l/2.0,  oY + l/2.0)
+
+        rPM = rad(dPM)
+        theta = rPM
+        while theta <= maxRads:
+            if theta%(details["degsPerLine"]) > 0.000001:
+                if theta< m.pi/2.0:
+                    rY = 0
+                    rX = l*(1 - m.sqrt(0.5)*(m.sin(theta)/m.sin(0.75*m.pi - theta)))
+
+                    dX= rX - cX
+                    dY = rY - cY
+                    dR = m.sqrt(dX*dX + dY*dY)
                     
-                               
+                    rX2 = rX - 2 * dX/dR
+                    rY2 = rY - 2 * dY/dR
+                    
+                    drawing.add(dxf.line((oX+rX2,oY+rY2),(oX+rX,oY+rY)))
+                else:
+                    rX = 0
+                    alpha = m.pi - theta
+                    rY = l*(1 - m.sqrt(0.5)*(m.sin(alpha)/m.sin(0.75*m.pi - alpha)))
+
+                    dX= rX - cX
+                    dY = rY - cY
+                    dR = m.sqrt(dX*dX + dY*dY)
+                    
+                    rX2 = rX - 2 * dX/dR
+                    rY2 = rY - 2 * dY/dR
+                    
+                    drawing.add(dxf.line((oX+rX2,oY+rY2),(oX+rX,oY+rY)))
+                theta += rPM
+                        
+            
         
-        
+def rad(deg):
+    return (deg/180.0) * m.pi
 
 def drawRectangle(drawing,topLeft,w,h):
 
